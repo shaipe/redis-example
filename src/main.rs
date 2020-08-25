@@ -13,13 +13,19 @@ fn do_something() -> redis::RedisResult<()> {
     let mut con = client.get_connection().unwrap();
     let mut v: BTreeMap<u32, u32> = BTreeMap::new();
     v.insert(2, 5);
+    v.insert(4, 6);
     // con.set("key1", b"foo");
     // redis::cmd("SET").arg("my_key2").arg(b"testatatat").execute(&mut con);
 
-    // let x1 = redis::pipe().cmd("HMSET").arg("key").arg(v).query(&mut con).unwrap();
-    let is_ok = con.sadd("ky5", v)?;
-    println!("{:?}", is_ok);
-    let x: BTreeMap<u32, u32> = con.smembers("ky5")?;
+    // 采用命令的方式也可以写入,测试成功
+    redis::pipe().cmd("SADD").arg("key6").arg(v).execute(&mut con);
+
+    // 采用con.sadd的方式也可以写入成功
+    // let is_ok = con.sadd("ky5", v)?;
+    // println!("{:?}", is_ok);
+
+    // 获取写入的set值
+    let x: BTreeMap<u32, u32> = con.smembers("key6")?;
     println!("{:?}", x);
 
     // println!("{:?}", con);
