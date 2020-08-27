@@ -6,8 +6,9 @@ fn main() {
 
     println!("{:?}", do_something());
 }
+const REDIS_URL: &'static str = "redis://127.0.0.1:6379/4";
 fn set_dic<T: ToRedisArgs + Clone>(map: BTreeMap<String, T>) {
-    let client = redis::Client::open("redis://127.0.0.1:6379/4").unwrap();
+    let client = redis::Client::open(REDIS_URL).unwrap();
 
     let conn = client.get_connection();
     if conn.is_err() {
@@ -24,7 +25,7 @@ fn set_dic<T: ToRedisArgs + Clone>(map: BTreeMap<String, T>) {
     }
 }
 fn do_something() -> redis::RedisResult<()> {
-    let client = redis::Client::open("redis://127.0.0.1:6379/4").unwrap();
+    let client = redis::Client::open(REDIS_URL).unwrap();
     let mut con = client.get_connection().unwrap();
     let mut v: BTreeMap<String, BTreeMap<u32, u32>> = BTreeMap::new();
     let mut dic: BTreeMap<u32, u32> = BTreeMap::new();
