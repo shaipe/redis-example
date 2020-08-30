@@ -1,10 +1,14 @@
 use redis::{Commands, ToRedisArgs};
 use std::collections::{BTreeMap, BTreeSet};
-
+use std::thread;
+use std::time::Duration as StdDuration;
 fn main() {
     println!("Hello, world!");
-
     println!("{:?}", do_something());
+    println!("{:?}", test_redis_pubsub());
+    // thread::spawn(move || {
+    //     println!("{:?}", test_redis_pubsub());
+    // });
 }
 fn set_hashs<K: AsRef<str>, T: ToRedisArgs + Copy>(map: BTreeMap<K, BTreeMap<T, T>>) {
     let client = redis::Client::open("redis://127.0.0.1:6379/0").unwrap();
@@ -60,10 +64,11 @@ fn do_something() -> redis::RedisResult<()> {
     // 采用con.sadd的方式也可以写入成功
     // let is_ok = con.sadd("ky5", v)?;
     println!("{:?}", 2);
-
+    
     // 获取写入的set值
     let x: BTreeMap<u32, u32> = con.hgetall("18981772611")?;
     println!("{:?}", x);
+    
 
     // println!("{:?}", con);
     // let count: i32 = con.get("my_counter")?;
@@ -76,4 +81,30 @@ fn do_something() -> redis::RedisResult<()> {
     // let mems: HashSet<i32> = con.smembers("my_set")?;
     // let (k1, k2): (String, String) = con.get(&["k1", "k2"])?;
     Ok(())
+}
+//测试订阅功能
+pub fn test_redis_pubsub()-> redis::RedisResult<()>{
+    let client = redis::Client::open("redis://127.0.0.1/")?;
+    let mut con = client.get_connection()?;
+    let mut pubsub = con.as_pubsub();
+    pubsub.subscribe("channel_1")?;
+    println!("channel_1");
+    loop {
+        let msg = match pubsub.get_message() {
+            Ok(s) => s,
+            Err(_) => {
+                println!("sss");
+                continue;
+            }
+        };
+        let payload: String = match msg.get_payload() {
+            Ok(s) => s,
+            Err(_) => {
+                println!("sss");
+                continue;
+            }
+        };
+        println!("channel '{}': {}", msg.get_channel_name(), payload);
+        thread::sleep(StdDuration::new(100, 0));
+    }
 }
